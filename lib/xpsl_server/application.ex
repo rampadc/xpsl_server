@@ -8,9 +8,10 @@ defmodule XpslServer.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: XpslServer.Worker.start_link(arg)
-      # {XpslServer.Worker, arg}
+      {Registry, keys: :unique, name: XpslServer.PlaylistRegistry},
     ]
+
+    :ets.new(:playlists_table, [:public, :named_table])
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

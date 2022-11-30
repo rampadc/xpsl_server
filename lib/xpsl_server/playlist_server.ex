@@ -7,7 +7,7 @@ defmodule XpslServer.PlaylistServer do
 
   require Logger
 
-  @timeout :timer.hours(2)
+  @timeout :timer.minutes(30)
 
   def start_link(playlist_name) do
     GenServer.start_link(__MODULE__, { playlist_name }, name: via_tuple(playlist_name))
@@ -18,7 +18,7 @@ defmodule XpslServer.PlaylistServer do
       case :ets.lookup(:playlists_table, playlist_name) do
         [] ->
           playlist = Playlist.new()
-          :ets.insert(:playlists_table, {playlist_name})
+          :ets.insert(:playlists_table, {playlist_name, playlist})
           playlist
         [{^playlist_name, playlist}] ->
           playlist
@@ -28,12 +28,34 @@ defmodule XpslServer.PlaylistServer do
     {:ok, playlist, @timeout}
   end
 
-  def handle_call(_msg, _from, state) do
-    {:reply, :ok, state}
+  def queue(playlist_name, track) do
+    GenServer.call(via_tuple(playlist_name), {:queue, track})
   end
 
-  def handle_cast(_msg, state) do
-    {:noreply, state}
+  def next(playlist_name) do
+    GenServer.call(via_tuple(playlist_name), {:next})
+  end
+
+  def previous(playlist_name) do
+    GenServer.call(via_tuple(playlist_name), {:previous})
+  end
+
+  def handle_call({:queue, track}, _from, playlist) do
+    new_playlist = Playlist.queue(playlist, track)
+    :ets.insert(:playlists_table, {current_playlist_name(), new_playlist})
+    {:reply, new_playlist, new_playlist, @timeout}
+  end
+
+  def handle_call({:next}, _from, playlist) do
+    new_playlist = Playlist.next(playlist)
+    :ets.insert(:playlists_table, {current_playlist_name(), new_playlist})
+    {:reply, new_playlist, new_playlist, @timeout}
+  end
+
+  def handle_call({:previous}, _from, playlist) do
+    new_playlist = Playlist.previous(playlist)
+    :ets.insert(:playlists_table, {current_playlist_name(), new_playlist})
+    {:reply, new_playlist, new_playlist, @timeout}
   end
 
   def via_tuple(playlist_name) do
@@ -46,12 +68,17 @@ defmodule XpslServer.PlaylistServer do
     |> GenServer.whereis()
   end
 
+  def handle_info(:timeout, playlist) do
+    {:stop, {:shutdown, :timeout}, playlist}
+  end
+
   def terminate({:shutdown, :timeout}, _playlist) do
     :ets.delete(:playlists_table, current_playlist_name())
     :ok
   end
 
-  def terminate(_reason, _playlist) do
+  def terminate(reason, _playlist) do
+    Logger.info("Catch-all terminate. Reason: #{reason}}")
     :ok
   end
 

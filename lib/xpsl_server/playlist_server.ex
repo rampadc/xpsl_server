@@ -24,7 +24,7 @@ defmodule XpslServer.PlaylistServer do
           playlist
       end
 
-    Logger.info("Spawned playlist server process called '#{playlist_name}}'")
+    Logger.info("Spawned playlist server process called '#{playlist_name}'")
     {:ok, playlist, @timeout}
   end
 

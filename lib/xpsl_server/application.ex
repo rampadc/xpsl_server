@@ -9,6 +9,7 @@ defmodule XpslServer.Application do
   def start(_type, _args) do
     children = [
       {Registry, keys: :unique, name: XpslServer.PlaylistRegistry},
+      XpslServer.PlaylistSupervisor
     ]
 
     :ets.new(:playlists_table, [:public, :named_table])

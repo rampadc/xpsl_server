@@ -101,7 +101,7 @@ defmodule PlaylistServerTest do
     end
   end
 
-  generate_name generate_name do
+  defp generate_name do
     "playlist-#{:rand.uniform(1_000_000)}"
   end
 end

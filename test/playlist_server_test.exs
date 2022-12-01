@@ -8,19 +8,19 @@ defmodule PlaylistServerTest do
   doctest PlaylistServer
 
   test "spawning a playlist server process" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
     assert {:ok, _pid} = PlaylistServer.start_link(playlist_name)
   end
 
   test "a playlist process is registered under a unique name" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
 
     assert {:ok, _pid} = PlaylistServer.start_link(playlist_name)
     assert {:error, _reason} = PlaylistServer.start_link(playlist_name)
   end
 
   test "add 1 track" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
     {:ok, _pid} = PlaylistServer.start_link(playlist_name)
 
     track1 = Track.new("track_url", 0)
@@ -30,7 +30,7 @@ defmodule PlaylistServerTest do
   end
 
   test "next track" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
     {:ok, _pid} = PlaylistServer.start_link(playlist_name)
 
     track1 = Track.new("track_url", 0)
@@ -42,7 +42,7 @@ defmodule PlaylistServerTest do
   end
 
   test "prev track" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
     {:ok, _pid} = PlaylistServer.start_link(playlist_name)
 
     track1 = Track.new("track_url", 0)
@@ -55,7 +55,7 @@ defmodule PlaylistServerTest do
   end
 
   test "stores initial state in ETS when started" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
     {:ok, _pid} = PlaylistServer.start_link(playlist_name)
 
     assert [{^playlist_name, playlist}] = :ets.lookup(:playlists_table, playlist_name)
@@ -65,7 +65,7 @@ defmodule PlaylistServerTest do
   end
 
   test "update state in ETS when new track is queued" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
     {:ok, _pid} = PlaylistServer.start_link(playlist_name)
 
     track1 = Track.new("track_url", 0)
@@ -76,7 +76,7 @@ defmodule PlaylistServerTest do
   end
 
   test "gets its initial state from ETS if previously stored" do
-    playlist_name = generate_playlist_name()
+    playlist_name = generate_name()
 
     track1 = Track.new("track_url", 0)
     playlist = Playlist.new()
@@ -91,7 +91,7 @@ defmodule PlaylistServerTest do
 
   describe "playlist_pid" do
     test "returns a PID if it has been registered" do
-      playlist_name = generate_playlist_name()
+      playlist_name = generate_name()
       {:ok, pid} = PlaylistServer.start_link(playlist_name)
       assert ^pid = PlaylistServer.playlist_pid(playlist_name)
     end
@@ -101,7 +101,7 @@ defmodule PlaylistServerTest do
     end
   end
 
-  defp generate_playlist_name do
+  generate_name generate_name do
     "playlist-#{:rand.uniform(1_000_000)}"
   end
 end
